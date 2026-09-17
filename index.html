@@ -59,11 +59,13 @@
   .navbar button.on { color:#17171a; font-weight:500; }
   .navbar button.on::after { transform:translateX(-50%) scaleX(1); }
 
-  .gallery { position:relative; background:#fff; touch-action:pan-y; user-select:none; -webkit-user-select:none; }
+  .gallery { position:relative; background:#fff; overflow:hidden; touch-action:pan-y; user-select:none; -webkit-user-select:none; }
   .gallery img { -webkit-user-drag:none; pointer-events:none; }
   #sec-style, #sec-sell, #sec-look, #sec-size { scroll-margin-top:calc(var(--sa) + var(--hh) + var(--nh)); }
-  .g-track { display:flex; width:100%; overflow:hidden; height:min(104vw, 500px); transition:transform .35s ease; }
-  .g-item { width:100%; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:8px 14px; }
+  .g-track { display:flex; width:100%; height:min(128vw, 614px); transition:transform .35s ease; }
+  .g-item { width:100%; flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .g-item.model img { width:100%; height:100%; max-width:none; max-height:none; object-fit:cover; object-position:center 35%; transform:scale(1.07); }
+  .g-item.product { background:#fff; padding:28px 48px 128px; }
   .g-item img { max-width:100%; max-height:100%; object-fit:contain; }
   .g-cap { display:none; position:absolute; top:8vw; left:0; right:0; text-align:center; font-size:10px; letter-spacing:3px; color:#a09a90; }
   .g-dots, .g-count { display:none !important; }
@@ -78,7 +80,13 @@
   .sec-head .en { font-size:11px; letter-spacing:5px; color:#a08a72; text-transform:uppercase; }
   .sec-head .cn { font-size:17px; font-weight:700; margin-top:5px; letter-spacing:2px; }
 
-  .p-title { padding:26px 24px 10px; text-align:center; }
+  .gallery::after { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(20,20,22,0) 52%, rgba(20,20,22,.28) 72%, rgba(20,20,22,.68) 100%); transition:opacity .35s; }
+  .gallery.is-light::after { opacity:0; }
+  .g-title { position:absolute; left:22px; right:22px; bottom:26px; z-index:2; pointer-events:none; color:#fff; transition:color .35s; }
+  .gallery.is-light .g-title { color:#17171a; }
+  .g-code { font-size:10px; letter-spacing:3px; opacity:.72; font-variant-numeric:tabular-nums; }
+  .g-title .p-name { text-align:left; font-size:25px; font-weight:600; margin-top:5px; letter-spacing:1px; color:inherit; }
+  .g-title .p-sub { text-align:left; margin-top:6px; font-size:12px; color:inherit; opacity:.86; letter-spacing:1px; }
   .p-name { font-size:22px; font-weight:700; text-align:center; line-height:1.4; letter-spacing:1px; text-wrap:balance; }
   .p-sub { font-size:12px; color:#8a8378; text-align:center; margin-top:8px; letter-spacing:1px; line-height:1.6; }
   .colors { display:flex; gap:8px; margin-top:18px; flex-wrap:wrap; justify-content:center; }
@@ -142,7 +150,7 @@
 
   .toast { position:fixed; bottom:15vh; left:50%; transform:translateX(-50%); background:rgba(30,30,36,.9); color:#fff; font-size:13px; border-radius:20px; padding:9px 20px; opacity:0; transition:opacity .3s; pointer-events:none; z-index:60; white-space:nowrap; }
   .toast.show { opacity:1; }
-  @media (prefers-reduced-motion: reduce) { .g-track, .g-dots i, .toast { transition:none !important; } html { scroll-behavior:auto; } }
+  @media (prefers-reduced-motion: reduce) { .gallery::after, .g-title, .g-track, .g-dots i, .toast { transition:none !important; } html { scroll-behavior:auto; } }
 </style>
 </head>
 <body>
@@ -179,14 +187,14 @@
 
   <div class="navbar" id="navBar"></div>
 
-  <div class="p-title" id="sec-style">
-    <div class="p-name" id="pName"></div>
-    <div class="p-sub" id="pSub"></div>
-  </div>
-
-  <div class="gallery">
+  <div class="gallery" id="sec-style">
     <div class="g-track" id="gTrack"></div>
     <div class="g-cap" id="gCap"></div>
+    <div class="g-title">
+      <div class="g-code" id="pCode"></div>
+      <h1 class="p-name" id="pName"></h1>
+      <p class="p-sub" id="pSub"></p>
+    </div>
     <div class="g-dots" id="gDots"></div>
     <div class="g-count" id="gCount"></div>
   </div>
@@ -324,7 +332,7 @@
     // 图集
     var track = '';
     for (var i = 0; i < s.gallery.length; i++) {
-      track += '<div class="g-item"><img src="' + s.gallery[i].img + '" alt=""></div>';
+      track += '<div class="g-item ' + (/^PRODUCT/.test(s.gallery[i].cap) ? 'product' : 'model') + '"><img src="' + s.gallery[i].img + '" alt=""></div>';
     }
     document.getElementById('gTrack').innerHTML = track;
     var dotsBox = document.getElementById('gDots');
@@ -338,6 +346,7 @@
     }
 
     // 款名与颜色（默认不选中，进入后展示主图）
+    document.getElementById('pCode').textContent = s.code;
     document.getElementById('pName').textContent = s.name;
     document.getElementById('pSub').textContent = s.sub;
 
@@ -439,6 +448,7 @@
       dots[k].className = (k === i) ? 'on' : '';
     }
     document.getElementById('gCap').textContent = s.gallery[i].cap;
+    document.getElementById('sec-style').classList.toggle('is-light', /^PRODUCT/.test(s.gallery[i].cap));
     document.getElementById('gCount').textContent = (i + 1) + ' / ' + s.gallery.length;
   }
 
@@ -474,7 +484,7 @@
 
   // ===== 手势滑动图册 =====
   (function () {
-    var g = document.querySelector('.gallery'), tr = document.getElementById('gTrack');
+    var g = document.getElementById('sec-style'), tr = document.getElementById('gTrack');
     var x0 = 0, y0 = 0, dx = 0, drag = false, lock = null;
     g.addEventListener('touchstart', function (e) {
       if (!curCode) return;
